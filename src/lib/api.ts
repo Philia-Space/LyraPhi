@@ -9,12 +9,22 @@ export interface ApiError {
 }
 
 export async function fetchJson<T = any>(url: string, options?: RequestInit): Promise<T> {
+  // Get token from localStorage
+  const token = typeof window !== "undefined" ? localStorage.getItem("phi_token") : null;
+  
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...options?.headers as Record<string, string>,
+  };
+  
+  // Add auth token if available
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
   const res = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
 
   if (!res.ok) {
@@ -28,13 +38,13 @@ export async function fetchJson<T = any>(url: string, options?: RequestInit): Pr
 // Auth APIs
 export const authApi = {
   login: (username: string, password: string) =>
-    fetchJson<{ access_token: string; user: { id: string; username: string; roles: string[] } }>(
+    fetchJson<{ success: boolean; data?: { access_token: string; user: { id: string; username: string; name: string; roles: string[] } }; error?: ApiError }>(
       `${API_BASE}/auth/login`,
       { method: "POST", body: JSON.stringify({ username, password }) }
     ),
 
   me: () =>
-    fetchJson<{ user: { id: string; username: string; name: string; roles: string[] } }>(
+    fetchJson<{ success: boolean; data?: { user: { id: string; username: string; name: string; roles: string[] } }; error?: ApiError }>(
       `${API_BASE}/auth/me`
     ),
 };
@@ -62,7 +72,7 @@ export const mondaiphiApi = {
 // ShikenPhi APIs
 export const shikenphiApi = {
   createSession: (body: { level: string; templateId?: string }) =>
-    fetchJson<{ sessionId: string }>(
+    fetchJson<{ success: boolean; data?: { session_id: string } }>(
       `${API_BASE}/shiken/sessions`,
       { method: "POST", body: JSON.stringify(body) }
     ),
@@ -77,7 +87,7 @@ export const shikenphiApi = {
     ),
 
   submitSession: (id: string) =>
-    fetchJson<{ score: number; total: number; percentage: number }>(
+    fetchJson<{ success: boolean; data?: { score: number; total: number; percentage: number } }>(
       `${API_BASE}/shiken/sessions/${id}/submit`,
       { method: "POST" }
     ),

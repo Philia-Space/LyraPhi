@@ -15,6 +15,10 @@ const nextConfig = {
         source: '/api/shiken/:path*',
         destination: `${process.env.SHIKEN_SERVICE_URL || 'http://localhost:8088'}/:path*`,
       },
+      {
+        source: '/.well-known/:path*',
+        destination: `${process.env.AUTH_SERVICE_URL || 'http://localhost:8080'}/.well-known/:path*`,
+      },
     ];
   },
 };

@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -64,6 +66,35 @@ export default function Navbar() {
               Profile
             </Link>
           </div>
+
+          {/* Vertical Divider */}
+          <div className="w-[1px] h-4 bg-slate-200 dark:bg-slate-800" />
+
+          {/* Auth Buttons */}
+          {mounted && (
+            <>
+              {isAuthenticated ? (
+                <div className="flex items-center gap-3">
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                    {user?.username}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="text-[10px] font-black uppercase tracking-widest font-mono px-2 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-all rounded-none cursor-pointer"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-[10px] font-black uppercase tracking-widest font-mono px-2 py-1 bg-slate-900 dark:bg-slate-100 hover:bg-slate-700 dark:hover:bg-slate-300 text-white dark:text-slate-900 transition-all rounded-none"
+                >
+                  Login
+                </Link>
+              )}
+            </>
+          )}
 
           {/* Vertical Divider */}
           <div className="w-[1px] h-4 bg-slate-200 dark:bg-slate-800" />
