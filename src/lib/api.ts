@@ -67,6 +67,16 @@ export const mondaiphiApi = {
 
   getAsset: (id: string) =>
     fetch(`${API_BASE}/mondai/assets/${id}`),
+
+  // Admin APIs
+  adminCreateQuestion: (body: { level: string; section: string; prompt: string; context?: string; answer_value: string; answer_note?: string; passage_id?: string; options?: { value: string; label: string; sort_order: number }[] }) =>
+    fetchJson(`${API_BASE}/mondai/admin/questions`, { method: "POST", body: JSON.stringify(body) }),
+
+  adminUpdateQuestion: (id: string, body: { prompt?: string; context?: string; answer_value?: string; answer_note?: string }) =>
+    fetchJson(`${API_BASE}/mondai/admin/questions/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+
+  adminDeleteQuestion: (id: string) =>
+    fetchJson(`${API_BASE}/mondai/admin/questions/${id}`, { method: "DELETE" }),
 };
 
 // ShikenPhi APIs
@@ -87,13 +97,22 @@ export const shikenphiApi = {
     ),
 
   submitSession: (id: string) =>
-    fetchJson<{ success: boolean; data?: { score: number; total: number; percentage: number } }>(
+    fetchJson<{ success: boolean; data?: { score: number; total: number; percentage: number; result_id: string; section_breakdown: any; question_results: any[]; achievements_unlocked?: any[] } }>(
       `${API_BASE}/shiken/sessions/${id}/submit`,
       { method: "POST" }
     ),
 
-  getResults: () =>
-    fetchJson(`${API_BASE}/shiken/results`),
+  getResult: (id: string) =>
+    fetchJson(`${API_BASE}/shiken/results/${id}`),
+
+  getResultReview: (resultId: string) =>
+    fetchJson(`${API_BASE}/shiken/results/${resultId}/review`),
+
+  getResults: (userId?: string) => {
+    const params = new URLSearchParams();
+    if (userId) params.set("user_id", userId);
+    return fetchJson(`${API_BASE}/shiken/results?${params}`);
+  },
 
   getLeaderboard: (params?: { period?: string; level?: string }) => {
     const searchParams = new URLSearchParams();
@@ -102,9 +121,21 @@ export const shikenphiApi = {
     return fetchJson(`${API_BASE}/shiken/leaderboard?${searchParams}`);
   },
 
-  getStats: () =>
-    fetchJson(`${API_BASE}/shiken/profile/stats`),
+  getStats: (userId?: string) => {
+    const params = new URLSearchParams();
+    if (userId) params.set("user_id", userId);
+    return fetchJson(`${API_BASE}/shiken/profile/stats?${params}`);
+  },
 
-  getStreaks: () =>
-    fetchJson(`${API_BASE}/shiken/profile/streaks`),
+  getStreaks: (userId?: string) => {
+    const params = new URLSearchParams();
+    if (userId) params.set("user_id", userId);
+    return fetchJson(`${API_BASE}/shiken/profile/streaks?${params}`);
+  },
+
+  getAchievements: (userId: string) => {
+    const params = new URLSearchParams();
+    params.set("user_id", userId);
+    return fetchJson(`${API_BASE}/shiken/profile/achievements?${params}`);
+  },
 };

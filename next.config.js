@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
+const path = require('path');
+
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['@philiaspace/phi-dashboard', '@philiaspace/ui-primitives'],
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@philiaspace/ui-primitives': path.resolve(__dirname, '../../libs/phi-ui-primitives/src/index.ts'),
+    };
+    return config;
+  },
   async rewrites() {
     return [
       {

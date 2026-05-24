@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { shikenphiApi } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import LevelBadge from "@/components/LevelBadge";
 
 interface UserStats {
   user_id: string;
@@ -17,20 +19,42 @@ interface UserStats {
   longest_streak: number;
 }
 
+interface UserAchievement {
+  user_id: string;
+  achievement: string;
+  unlocked_at: string;
+  session_id: string;
+}
+
 export default function ProfilePage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    loadProfile();
+  }, [user]);
 
-  const loadStats = async () => {
+  const loadProfile = async () => {
+    const userId = user?.id;
     try {
-      const data = await shikenphiApi.getStats();
-      setStats(data);
+      const [statsRes, achievementsRes] = await Promise.allSettled([
+        userId ? shikenphiApi.getStats(userId) : shikenphiApi.getStats(),
+        userId ? shikenphiApi.getAchievements(userId) : Promise.reject(new Error("no user")),
+      ]);
+
+      if (statsRes.status === "fulfilled") {
+        const payload = statsRes.value?.data || statsRes.value;
+        setStats(payload);
+      }
+
+      if (achievementsRes.status === "fulfilled") {
+        const payload = achievementsRes.value?.data || achievementsRes.value;
+        setAchievements(payload?.achievements || []);
+      }
     } catch (err) {
-      console.error("Failed to load stats:", err);
+      console.error("Failed to load profile:", err);
     } finally {
       setLoading(false);
     }
@@ -188,12 +212,42 @@ export default function ProfilePage() {
 
           </div>
 
-          {/* Recent Activity Panel - Sharp UI */}
+          {/* Achievements Panel */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none shadow-none transition-colors duration-200">
+            <h2 className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
+              ACHIEVEMENTS UNLOCKED ({achievements.length})
+            </h2>
+            {achievements.length === 0 ? (
+              <p className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500 text-center py-6 uppercase tracking-wider">
+                No achievements yet. Complete exams to unlock achievements!
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {achievements.map((a, i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+                    <div className="w-8 h-8 flex items-center justify-center bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-black font-mono rounded-none shrink-0">
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black font-mono uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
+                        {a.achievement.replace(/_/g, " ")}
+                      </div>
+                      <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500">
+                        {new Date(a.unlocked_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Activity Panel */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none shadow-none transition-colors duration-200">
             <h2 className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
               HISTORICAL ASSESSMENT RECORD
             </h2>
-            <p className="text-xs font-mono font-bold text-slate-450 dark:text-slate-500 text-center py-6 uppercase tracking-wider">
+            <p className="text-xs font-mono font-bold text-slate-400 dark:text-slate-500 text-center py-6 uppercase tracking-wider">
               No recent assessment runs. Take an exam to initialize your timeline!
             </p>
           </div>

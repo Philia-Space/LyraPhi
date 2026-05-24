@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { shikenphiApi } from "@/lib/api";
 import LevelBadge from "@/components/LevelBadge";
 
 export default function ExamPage() {
+  const router = useRouter();
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark") {
+      document.documentElement.classList.add("dark");
+    } else if (stored === "light") {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
   const levels = ["N5", "N4", "N3", "N2", "N1"];
 
@@ -21,11 +32,16 @@ export default function ExamPage() {
         level,
         templateId: "tpl_balanced_75",
       });
-      window.location.href = `/exam/${session.sessionId}`;
+      const sessionId = session.data?.session_id;
+      if (sessionId) {
+        router.push(`/exam/${sessionId}`);
+      } else {
+        throw new Error("Failed to create session");
+      }
     } catch (err: any) {
-      console.warn("[LyraPhi] Backend API not available. Simulating local exam session creation.", err);
-      const mockSessionId = `sess_mock_${Date.now()}`;
-      window.location.href = `/exam/${mockSessionId}`;
+      console.error("[LyraPhi] Failed to create session:", err);
+      setError(err.message || "Failed to start exam. Please try again.");
+      setLoading(false);
     }
   };
 

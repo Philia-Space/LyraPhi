@@ -13,8 +13,16 @@ export default function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-    const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark") {
+      document.documentElement.classList.add("dark");
+      setTheme("dark");
+    } else if (stored === "light") {
+      document.documentElement.classList.remove("dark");
+      setTheme("light");
+    } else {
+      setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+    }
   }, []);
 
   // Hapus Navbar pada saat sesi aktif kuis berjalan (/exam/[sessionId])
@@ -65,6 +73,14 @@ export default function Navbar() {
             >
               Profile
             </Link>
+            {user?.roles?.includes("admin") && (
+              <Link 
+                href="/admin" 
+                className="text-[10px] font-black uppercase tracking-widest font-mono text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+              >
+                Admin
+              </Link>
+            )}
           </div>
 
           {/* Vertical Divider */}

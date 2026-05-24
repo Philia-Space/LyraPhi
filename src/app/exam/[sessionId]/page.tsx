@@ -23,6 +23,7 @@ interface Passage {
 
 interface Question {
   id: string;
+  serverIndex: number;
   section?: string;
   prompt: string;
   context?: string;
@@ -31,110 +32,29 @@ interface Question {
   options: Option[];
 }
 
-const BASE_DEMO_QUESTIONS: Question[] = [
-  {
-    id: "qst_1",
-    section: "grammar",
-    context: "次の文の（　）に入れるのに最もよいものを、１・２・３・４から一つ選びなさい。",
-    prompt: "日本語を毎日練習している（　）、だんだん話せるようになってきました。",
-    options: [
-      { id: "opt_1", value: "1", label: "おかげで" },
-      { id: "opt_2", value: "2", label: "せいで" },
-      { id: "opt_3", value: "3", label: "かわりに" },
-      { id: "opt_4", value: "4", label: "たびに" },
-    ],
-  },
-  {
-    id: "qst_2",
-    section: "grammar",
-    context: "次の文の（　）に入れるのに最もよいものを、１・２・３・４から一つ選びなさい。",
-    prompt: "この仕事は時間がかかりますが、最後まで（　）やり遂げたいと思います。",
-    options: [
-      { id: "opt_1", value: "1", label: "あきらめずに" },
-      { id: "opt_2", value: "2", label: "あきらめながら" },
-      { id: "opt_3", value: "3", label: "あきらめて" },
-      { id: "opt_4", value: "4", label: "あきらめるなら" },
-    ],
-  },
-  {
-    id: "qst_3",
-    section: "reading",
-    context: "次の文章を読んで、後の問いに対する答えとして最もよいものを、１・２・３・４から一つ選びなさい。",
-    passage: {
-      content: "最近、スマートフォンの使いすぎが社会問題になっています。特に若い人たちの間で、コミュニケーションをとるために常に画面を見つめる姿が目立ちます。しかし、対面での対話をおろそかにすることは、本当の絆を育む妨げになりかねません。時にはデバイスを置いて、目の前の人との対話を楽しむことが推奨されています。"
-    },
-    prompt: "この文章で筆者が最も言いたいことは何か。",
-    options: [
-      { id: "opt_1", value: "1", label: "スマートフォンの使い方を全面的にやめるべきだ。" },
-      { id: "opt_2", value: "2", label: "対話の質を高めるために、スマホを置いて対面での対話を大切にすべきだ。" },
-      { id: "opt_3", value: "3", label: "若者はスマホを制限なく利用してよい。" },
-      { id: "opt_4", value: "4", label: "スマートフォンの進歩が人間関係を壊した。" },
-    ],
-  },
-  {
-    id: "qst_4",
-    section: "listening",
-    context: "問題用紙に何が書いてあるか、あらかじめ聞きなさい。音声を再生して正しい答えを選んでください。",
-    assets: [
-      { type: "audio", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" }
-    ],
-    prompt: "男の人と女の人が話しています。二人は明日何時に会いますか。",
-    options: [
-      { id: "opt_1", value: "1", label: "午前9時" },
-      { id: "opt_2", value: "2", label: "午前10時" },
-      { id: "opt_3", value: "3", label: "午後12時" },
-      { id: "opt_4", value: "4", label: "午後2時" },
-    ],
-  },
-  {
-    id: "qst_5",
-    section: "listening",
-    context: "質問を聞いて、正しい番号を選択してください。",
-    assets: [
-      { type: "audio", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-      { type: "image", url: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=500&auto=format&fit=crop&q=60" }
-    ],
-    prompt: "この写真を見て、正しい内容を選びなさい。",
-    options: [
-      { id: "opt_1", value: "1", label: "本を読んでいる様子" },
-      { id: "opt_2", value: "2", label: "音楽を聴いている様子" },
-      { id: "opt_3", value: "3", label: "食事をしている様子" },
-      { id: "opt_4", value: "4", label: "運動をしている様子" },
-    ],
-  },
-];
-
-// Generate exactly 105 questions programmatically (35 grammar, 35 reading, 35 listening)
-const DEMO_QUESTIONS: Question[] = [];
-
-// 1. Grammar: 35 questions (indices 0 to 34)
-for (let i = 0; i < 35; i++) {
-  const base = BASE_DEMO_QUESTIONS[i % 2];
-  DEMO_QUESTIONS.push({
-    ...base,
-    id: `qst_g_${i + 1}`,
-    prompt: `[Grammar Q-${i + 1}] ${base.prompt}`,
+function mapShikenQuestions(raw: any[]): Question[] {
+  const sectionOrder: Record<string, number> = { grammar: 0, vocabulary: 0, reading: 1, listening: 2 };
+  const sorted = [...(raw || [])].sort((a, b) => {
+    return (sectionOrder[a.section] ?? 9) - (sectionOrder[b.section] ?? 9);
   });
-}
-
-// 2. Reading: 35 questions (indices 35 to 69)
-for (let i = 0; i < 35; i++) {
-  const base = BASE_DEMO_QUESTIONS[2];
-  DEMO_QUESTIONS.push({
-    ...base,
-    id: `qst_r_${i + 1}`,
-    prompt: `[Reading Q-${i + 1}] ${base.prompt}`,
-  });
-}
-
-// 3. Listening: 35 questions (indices 70 to 104)
-for (let i = 0; i < 35; i++) {
-  const base = BASE_DEMO_QUESTIONS[3 + (i % 2)];
-  DEMO_QUESTIONS.push({
-    ...base,
-    id: `qst_l_${i + 1}`,
-    prompt: `[Listening Q-${i + 1}] ${base.prompt}`,
-  });
+  return sorted.map((q: any, qIndex: number) => ({
+    id: q.id || `q-${qIndex}`,
+    serverIndex: q.index ?? qIndex,
+    section: q.section,
+    prompt: q.prompt,
+    context: q.context || undefined,
+    passage: q.passage ? { content: q.passage.content } : undefined,
+    assets: (q.assets || []).map((a: any, aIndex: number) => ({
+      type: a.type,
+      url: a.url || `/api/mondai/assets/${a.asset_id}`,
+    })),
+    options: (q.options || []).map((o: any, oIndex: number) => {
+      if (typeof o === "string") {
+        return { id: `opt-${q.id}-${oIndex}`, value: o, label: o };
+      }
+      return { id: o.id || `opt-${q.id}-${oIndex}`, value: o.value, label: o.label || o.value };
+    }),
+  }));
 }
 
 export default function ExamSessionPage() {
@@ -148,26 +68,35 @@ export default function ExamSessionPage() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<number, boolean>>({});
   const [sessionData, setSessionData] = useState<any>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState({ show: false, message: "" });
   const [isDark, setIsDark] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
-  // Theme Sync
   useEffect(() => {
-    const isCurrentlyDark = document.documentElement.classList.contains("dark");
-    setIsDark(isCurrentlyDark);
-  }, []);
-
-  const toggleTheme = () => {
-    if (document.documentElement.classList.contains("dark")) {
+    const stored = localStorage.getItem("theme");
+    if (stored === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDark(true);
+    } else if (stored === "light") {
       document.documentElement.classList.remove("dark");
       setIsDark(false);
     } else {
-      document.documentElement.classList.add("dark");
-      setIsDark(true);
+      setIsDark(document.documentElement.classList.contains("dark"));
     }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !document.documentElement.classList.contains("dark");
+    if (nextDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    setIsDark(nextDark);
+    localStorage.setItem("theme", nextDark ? "dark" : "light");
   };
 
   // Load session
@@ -177,15 +106,25 @@ export default function ExamSessionPage() {
 
   const loadSession = async () => {
     try {
-      const data = await shikenphiApi.getSession(sessionId);
-      setSessionData(data.session);
+      const res = await shikenphiApi.getSession(sessionId);
+      const payload = res.data || res;
+      setSessionData(payload.session);
+      if (payload.questions) {
+        const mapped = mapShikenQuestions(payload.questions);
+        setQuestions(mapped);
+        const restored: Record<number, string> = {};
+        mapped.forEach((q: any, uiIdx: number) => {
+          if (q.user_answer) {
+            restored[uiIdx] = q.user_answer;
+          }
+        });
+        if (Object.keys(restored).length > 0) {
+          setAnswers(restored);
+        }
+      }
     } catch (err: any) {
-      console.warn("[LyraPhi] Backend API not available. Falling back to local dummy session mode.", err);
-      setSessionData({
-        sessionId: sessionId,
-        level: "N5",
-        question_count: DEMO_QUESTIONS.length,
-      });
+      console.error("[LyraPhi] Failed to load session:", err);
+      setError(err.message || "Failed to load exam session. Please try again.");
     } finally {
       const savedTimer = sessionStorage.getItem(`lyra_timer_${sessionId}`);
       if (savedTimer) {
@@ -217,10 +156,11 @@ export default function ExamSessionPage() {
 
   const handleAnswer = async (questionIndex: number, optionValue: string) => {
     setAnswers((prev) => ({ ...prev, [questionIndex]: optionValue }));
+    const serverIdx = questions[questionIndex]?.serverIndex ?? questionIndex;
     try {
-      await shikenphiApi.saveAnswer(sessionId, questionIndex, optionValue);
+      await shikenphiApi.saveAnswer(sessionId, serverIdx, optionValue);
     } catch (err) {
-      console.warn("[LyraPhi] Failed to save answer to backend:", err);
+      console.error("[LyraPhi] Failed to save answer:", err);
     }
   };
 
@@ -229,7 +169,7 @@ export default function ExamSessionPage() {
   };
 
   const triggerSubmitConfirm = () => {
-    const totalQ = sessionData?.question_count || DEMO_QUESTIONS.length;
+    const totalQ = questions.length;
     const answeredCount = Object.keys(answers).length;
     const unanswered = totalQ - answeredCount;
 
@@ -246,15 +186,23 @@ export default function ExamSessionPage() {
     setConfirmDialog({ show: false, message: "" });
     setLoading(true);
     try {
-      const result = await shikenphiApi.submitSession(sessionId);
+      if (answers[currentQuestion] !== undefined) {
+        const serverIdx = questions[currentQuestion]?.serverIndex ?? currentQuestion;
+        await shikenphiApi.saveAnswer(sessionId, serverIdx, answers[currentQuestion]);
+      }
+      const res = await shikenphiApi.submitSession(sessionId);
       sessionStorage.removeItem(`lyra_timer_${sessionId}`);
-      router.push(`/results?sessionId=${sessionId}&score=${result.percentage}`);
+      const data: any = res.data || res;
+      if (data?.result_id) {
+        router.push(`/results?resultId=${data.result_id}`);
+      } else {
+        const percentage = data?.percentage ?? 0;
+        router.push(`/results?sessionId=${sessionId}&score=${percentage}`);
+      }
     } catch (err: any) {
-      console.warn("[LyraPhi] Failed to submit exam to backend. Simulating local score calculation.", err);
-      const answeredCount = Object.keys(answers).length;
-      const percentage = Math.round((answeredCount / totalQuestions) * 100);
+      console.error("[LyraPhi] Failed to submit exam:", err);
       sessionStorage.removeItem(`lyra_timer_${sessionId}`);
-      router.push(`/results?sessionId=${sessionId}&score=${percentage}`);
+      router.push(`/exam`);
     }
   };
 
@@ -296,7 +244,24 @@ export default function ExamSessionPage() {
     );
   }
 
-  const questions: Question[] = sessionData?.questions || DEMO_QUESTIONS;
+  if (questions.length === 0) {
+    return (
+      <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 items-center justify-center">
+        <div className="text-center p-6 bg-white dark:bg-slate-900 rounded-none border border-slate-300 dark:border-slate-700 shadow-sm max-w-sm w-full">
+          <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed mb-6 font-mono">
+            No questions loaded for this session.
+          </p>
+          <button
+            onClick={() => router.push("/exam")}
+            className="w-full py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-none hover:bg-slate-800 dark:hover:bg-white transition-colors cursor-pointer"
+          >
+            Return to Level Selection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const totalQuestions = questions.length;
   const question = questions[currentQuestion] || questions[0];
 
@@ -315,13 +280,12 @@ export default function ExamSessionPage() {
   const currentSectionLabel = sectionLabelMap[question.section || ""] || "ASSESSMENT";
   const examTitle = `${sessionData?.level || "N5"} BALANCED 75 - EXAM BUNDLE A`;
 
-  // Compute question indices dynamically based on actual loaded questions
   const grammarIndices: number[] = [];
   const readingIndices: number[] = [];
   const listeningIndices: number[] = [];
 
   questions.forEach((q, idx) => {
-    if (q.section === "grammar") {
+    if (q.section === "grammar" || q.section === "vocabulary") {
       grammarIndices.push(idx);
     } else if (q.section === "reading") {
       readingIndices.push(idx);
@@ -331,6 +295,25 @@ export default function ExamSessionPage() {
       grammarIndices.push(idx);
     }
   });
+
+  const sectionOffsets: Record<string, number> = {
+    grammar: 0,
+    reading: grammarIndices.length,
+    listening: grammarIndices.length + readingIndices.length,
+  };
+
+  const getDisplayNumber = (globalIdx: number): number => {
+    const q = questions[globalIdx];
+    const section = q?.section || "grammar";
+    const base = sectionOffsets[section] ?? 0;
+    const sectionArr = section === "reading" ? readingIndices : section === "listening" ? listeningIndices : grammarIndices;
+    const localIdx = sectionArr.indexOf(globalIdx);
+    return base + localIdx + 1;
+  };
+
+  const currentDisplayNumber = getDisplayNumber(currentQuestion);
+
+  const displayPrompt = question.prompt === "[No prompt available]" ? "" : question.prompt;
 
   const sections = [
     {
@@ -407,7 +390,7 @@ export default function ExamSessionPage() {
             {!isSectionCollapsed(section.key) && (
               <div className="p-3 bg-white dark:bg-slate-900 border-none">
                 <div className="grid grid-cols-6 gap-1.5">
-                  {section.indices.map((idx) => (
+                  {section.indices.map((idx, localIdx) => (
                     <button
                       key={"sec-" + idx}
                       onClick={() => {
@@ -418,7 +401,7 @@ export default function ExamSessionPage() {
                         colorClasses[getQuestionColor(idx)]
                       }`}
                     >
-                      {idx + 1}
+                      {(sectionOffsets[section.key] ?? 0) + localIdx + 1}
                       {flaggedQuestions[idx] && (
                         <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-amber-500"></span>
                       )}
@@ -558,7 +541,7 @@ export default function ExamSessionPage() {
             <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-200 dark:border-slate-800">
               <div className="flex items-center gap-4">
                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono select-none">
-                  QUESTION {currentQuestion + 1} OF {totalQuestions}
+                  QUESTION {currentDisplayNumber} OF {totalQuestions}
                 </span>
                 <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase font-mono tracking-widest">
                   {question.section || "grammar"}
@@ -633,9 +616,15 @@ export default function ExamSessionPage() {
                   {question.context}
                 </p>
               )}
-              <h3 className="text-sm sm:text-base font-medium dark:font-normal text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-sans">
-                {question.prompt}
-              </h3>
+              {displayPrompt ? (
+                <h3 className="text-sm sm:text-base font-medium dark:font-normal text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-sans">
+                  {displayPrompt}
+                </h3>
+              ) : question.section === "listening" ? (
+                <p className="text-xs sm:text-sm italic text-slate-500 dark:text-slate-400 font-sans">
+                  Listen to the audio and select the correct answer.
+                </p>
+              ) : null}
             </div>
 
             {/* Options list exactly like Ayumu (Sharp check Indicators, uniform readable text colors) */}
@@ -667,7 +656,7 @@ export default function ExamSessionPage() {
                       </span>
 
                       <span className="text-xs sm:text-sm font-semibold dark:font-medium text-slate-800 dark:text-slate-200 mr-1 select-none font-mono">
-                        {idx + 1}.
+                        {String.fromCharCode(65 + idx)}.
                       </span>
                       <span className="text-xs sm:text-sm font-medium dark:font-normal text-slate-800 dark:text-slate-200 font-sans">
                         {option.label}
