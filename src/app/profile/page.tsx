@@ -27,7 +27,6 @@ export default function ProfilePage() {
 
   const loadStats = async () => {
     try {
-      // TODO: Get actual user ID from auth context
       const data = await shikenphiApi.getStats();
       setStats(data);
     } catch (err) {
@@ -54,11 +53,11 @@ export default function ProfilePage() {
   const displayStats = stats || defaultStats;
 
   const ranks = [
-    { name: "Beginner", minXP: 0, color: "bg-gray-100" },
-    { name: "Apprentice", minXP: 500, color: "bg-green-100" },
-    { name: "Scholar", minXP: 1500, color: "bg-blue-100" },
-    { name: "Master", minXP: 5000, color: "bg-purple-100" },
-    { name: "Sensei", minXP: 10000, color: "bg-yellow-100" },
+    { name: "Beginner", minXP: 0 },
+    { name: "Apprentice", minXP: 500 },
+    { name: "Scholar", minXP: 1500 },
+    { name: "Master", minXP: 5000 },
+    { name: "Sensei", minXP: 10000 },
   ];
 
   const currentRank =
@@ -73,96 +72,132 @@ export default function ProfilePage() {
     : 100;
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8">
-      <h1 className="text-3xl font-bold mb-8">Profile</h1>
+    <main className="flex min-h-screen flex-col items-center p-6 sm:p-8 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-200">
+      {/* Academic Page Header */}
+      <h1 className="text-2xl sm:text-3xl font-black mb-8 tracking-widest font-mono uppercase text-slate-800 dark:text-white border-b-2 border-slate-900 dark:border-white pb-2">
+        CANDIDATE DOSSIER
+      </h1>
 
       {loading ? (
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="p-12 text-center">
+          <div className="animate-spin rounded-none h-6 w-6 border-2 border-t-transparent border-slate-900 dark:border-slate-100 mx-auto"></div>
+          <p className="mt-4 text-[10px] font-mono font-black uppercase tracking-widest text-slate-500 dark:text-slate-450 animate-pulse">
+            Loading Dossier Records...
+          </p>
+        </div>
       ) : (
         <div className="w-full max-w-2xl space-y-6">
-          {/* Rank Card */}
-          <div className="bg-white border rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          
+          {/* Rank & XP Card - Sharp UI */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none shadow-none transition-colors duration-200">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
               <div>
-                <h2 className="text-lg font-semibold">Current Rank</h2>
-                <p className="text-3xl font-bold text-blue-600">
+                <h2 className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  CURRENT ACCREDITATION
+                </h2>
+                <p className="text-2xl font-black font-mono uppercase tracking-wider text-slate-800 dark:text-white mt-1">
                   {displayStats.current_rank}
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500">Total XP</div>
-                <div className="text-2xl font-bold">
-                  {displayStats.total_xp.toLocaleString()}
+              <div className="text-left sm:text-right">
+                <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                  TOTAL EXPERIENCE
+                </div>
+                <div className="text-2xl font-black font-mono text-slate-800 dark:text-white mt-1">
+                  {displayStats.total_xp.toLocaleString()} XP
                 </div>
               </div>
             </div>
 
             {nextRank && (
-              <div>
-                <div className="flex justify-between text-sm mb-1">
+              <div className="mt-6">
+                <div className="flex justify-between text-[10px] font-mono font-bold text-slate-450 dark:text-slate-500 mb-1.5">
                   <span>{currentRank.minXP} XP</span>
                   <span>{nextRank.minXP} XP</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                {/* Sharp Progress Bar */}
+                <div className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-250 dark:border-slate-700 rounded-none h-3 p-[1px] flex items-center">
                   <div
-                    className="bg-blue-600 h-3 rounded-full transition-all"
+                    className="bg-slate-800 dark:bg-slate-200 h-full rounded-none transition-all duration-300"
                     style={{ width: `${Math.max(0, Math.min(100, xpProgress))}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  {nextRank.minXP - displayStats.total_xp} XP until {nextRank.name}
+                <p className="text-[10px] font-mono font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mt-2">
+                  {nextRank.minXP - displayStats.total_xp} XP required to advance to {nextRank.name}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats Grid - All metrics colored identically (Professional/Uniform) */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="bg-white border rounded-lg p-6 shadow-sm text-center">
-              <div className="text-3xl font-bold text-blue-600">
+            
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center shadow-none transition-colors duration-200">
+              <div className="text-3xl font-black font-mono text-slate-800 dark:text-white">
                 {displayStats.total_exams}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Total Exams</div>
+              <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-450 dark:text-slate-500 mt-2">
+                Exams Completed
+              </div>
             </div>
-            <div className="bg-white border rounded-lg p-6 shadow-sm text-center">
-              <div className="text-3xl font-bold text-green-600">
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center shadow-none transition-colors duration-200">
+              <div className="text-3xl font-black font-mono text-slate-800 dark:text-white">
                 {displayStats.avg_score}%
               </div>
-              <div className="text-sm text-gray-500 mt-1">Avg Score</div>
+              <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-450 dark:text-slate-500 mt-2">
+                Average Accuracy
+              </div>
             </div>
-            <div className="bg-white border rounded-lg p-6 shadow-sm text-center">
-              <div className="text-3xl font-bold text-purple-600">
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center shadow-none transition-colors duration-200">
+              <div className="text-3xl font-black font-mono text-slate-800 dark:text-white">
                 {displayStats.best_score}%
               </div>
-              <div className="text-sm text-gray-500 mt-1">Best Score</div>
+              <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-450 dark:text-slate-500 mt-2">
+                Personal Record
+              </div>
             </div>
-            <div className="bg-white border rounded-lg p-6 shadow-sm text-center">
-              <div className="text-3xl font-bold text-orange-600">
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center shadow-none transition-colors duration-200">
+              <div className="text-3xl font-black font-mono text-slate-800 dark:text-white">
                 {displayStats.current_streak}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Current Streak</div>
+              <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-450 dark:text-slate-500 mt-2">
+                Current Streak
+              </div>
             </div>
-            <div className="bg-white border rounded-lg p-6 shadow-sm text-center">
-              <div className="text-3xl font-bold text-red-600">
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center shadow-none transition-colors duration-200">
+              <div className="text-3xl font-black font-mono text-slate-800 dark:text-white">
                 {displayStats.longest_streak}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Longest Streak</div>
+              <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-450 dark:text-slate-500 mt-2">
+                Longest Streak
+              </div>
             </div>
-            <div className="bg-white border rounded-lg p-6 shadow-sm text-center">
-              <div className="text-3xl font-bold text-indigo-600">
+
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center shadow-none transition-colors duration-200">
+              <div className="text-3xl font-black font-mono text-slate-800 dark:text-white">
                 {displayStats.best_level}
               </div>
-              <div className="text-sm text-gray-500 mt-1">Best Level</div>
+              <div className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-450 dark:text-slate-500 mt-2">
+                Highest Level
+              </div>
             </div>
+
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white border rounded-lg p-6 shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-            <p className="text-gray-500 text-center py-4">
-              No recent exams. Take your first exam to see activity here!
+          {/* Recent Activity Panel - Sharp UI */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none shadow-none transition-colors duration-200">
+            <h2 className="text-[10px] font-black font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">
+              HISTORICAL ASSESSMENT RECORD
+            </h2>
+            <p className="text-xs font-mono font-bold text-slate-450 dark:text-slate-500 text-center py-6 uppercase tracking-wider">
+              No recent assessment runs. Take an exam to initialize your timeline!
             </p>
           </div>
+
         </div>
       )}
     </main>

@@ -1,59 +1,101 @@
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold mb-8 text-center">
-          LyraPhi
-        </h1>
-        <p className="text-center text-xl mb-12">
-          JLPT Practice Exam Application
-        </p>
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 sm:p-24 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 transition-colors duration-200">
+      <div className="z-10 w-full max-w-5xl items-center justify-between font-sans text-sm">
+        {/* Academic Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl sm:text-5xl font-black mb-4 tracking-widest font-mono uppercase text-slate-800 dark:text-white border-b-4 border-slate-800 dark:border-white pb-3 inline-block">
+            LYRAPHI
+          </h1>
+          <p className="text-sm sm:text-base font-mono uppercase font-black tracking-widest text-slate-500 dark:text-slate-400 mt-2">
+            Professional JLPT Assessment Platform
+          </p>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Sharp Console Menu Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {/* Start Exam Card */}
           <a
             href="/exam"
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100"
+            className="group block border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 transition-all duration-200 hover:border-slate-800 dark:hover:border-slate-300 hover:scale-[1.02] rounded-none cursor-pointer"
           >
-            <h2 className="mb-3 text-2xl font-semibold">
-              Start Exam{" "}
-              <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-                -&gt;
-              </span>
-            </h2>
-            <p className="m-0 max-w-[30ch] text-sm opacity-50">
-              Begin a new JLPT practice session.
-            </p>
+            <div className="flex flex-col h-full justify-between gap-4">
+              <div>
+                <h2 className="text-xs font-mono font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors mb-2">
+                  MODULE 01
+                </h2>
+                <h3 className="text-lg font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-100">
+                  START EXAM
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-2 font-medium">
+                  Initialize a new JLPT practice exam session. Choose N5–N1, receive mock scoring, and track performance.
+                </p>
+              </div>
+              <div className="text-xs font-mono font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 flex items-center gap-1.5 mt-2">
+                Launch Console
+                <span className="inline-block transition-transform group-hover:translate-x-1 duration-200">
+                  &rarr;
+                </span>
+              </div>
+            </div>
           </a>
 
+          {/* Leaderboard Card */}
           <a
             href="/leaderboard"
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100"
+            className="group block border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 transition-all duration-200 hover:border-slate-800 dark:hover:border-slate-300 hover:scale-[1.02] rounded-none cursor-pointer"
           >
-            <h2 className="mb-3 text-2xl font-semibold">
-              Leaderboard{" "}
-              <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-                -&gt;
-              </span>
-            </h2>
-            <p className="m-0 max-w-[30ch] text-sm opacity-50">
-              View rankings and compete with others.
-            </p>
+            <div className="flex flex-col h-full justify-between gap-4">
+              <div>
+                <h2 className="text-xs font-mono font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors mb-2">
+                  MODULE 02
+                </h2>
+                <h3 className="text-lg font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-100">
+                  LEADERBOARD
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-2 font-medium">
+                  Compare results, average accuracy, and total scores globally. Compete for the best scores in N5–N1 levels.
+                </p>
+              </div>
+              <div className="text-xs font-mono font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 flex items-center gap-1.5 mt-2">
+                View Rankings
+                <span className="inline-block transition-transform group-hover:translate-x-1 duration-200">
+                  &rarr;
+                </span>
+              </div>
+            </div>
           </a>
 
+          {/* Profile Card */}
           <a
             href="/profile"
-            className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100"
+            className="group block border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 transition-all duration-200 hover:border-slate-800 dark:hover:border-slate-300 hover:scale-[1.02] rounded-none cursor-pointer"
           >
-            <h2 className="mb-3 text-2xl font-semibold">
-              Profile{" "}
-              <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-                -&gt;
-              </span>
-            </h2>
-            <p className="m-0 max-w-[30ch] text-sm opacity-50">
-              Check your stats and streaks.
-            </p>
+            <div className="flex flex-col h-full justify-between gap-4">
+              <div>
+                <h2 className="text-xs font-mono font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white transition-colors mb-2">
+                  MODULE 03
+                </h2>
+                <h3 className="text-lg font-black uppercase tracking-wider font-mono text-slate-800 dark:text-slate-100">
+                  USER PROFILE
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-2 font-medium">
+                  Review academic history, XP points accumulation, learning streaks, exam completion stats, and rank tier progress.
+                </p>
+              </div>
+              <div className="text-xs font-mono font-black uppercase tracking-widest text-slate-800 dark:text-slate-100 flex items-center gap-1.5 mt-2">
+                Check Progress
+                <span className="inline-block transition-transform group-hover:translate-x-1 duration-200">
+                  &rarr;
+                </span>
+              </div>
+            </div>
           </a>
+        </div>
+
+        {/* Small Footer Detail */}
+        <div className="text-center mt-20 text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">
+          Secure Academic Authentication Console &copy; 2026 LyraPhi
         </div>
       </div>
     </main>
