@@ -15,21 +15,40 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    const userId = searchParams.get("user_id");
-    const name = searchParams.get("name");
-    const uname = searchParams.get("username");
-
-    if (token && userId) {
-      localStorage.setItem("phi_token", token);
-      localStorage.setItem(
-        "phi_user",
-        JSON.stringify({ id: userId, username: uname || "", name: name || "", roles: ["user"] })
-      );
-      router.replace("/");
+    const code = searchParams.get("code");
+    if (code) {
+      setIsLoading(true);
+      // Exchange code for token via server-side
+      fetch("/api/auth/discord/redeem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      })
+        .then((res) => res.json())
+        .then(async (data) => {
+          if (data.success && data.data?.access_token) {
+            // Set httpOnly cookie via server
+            await fetch("/api/auth/set-cookie", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                access_token: data.data.access_token,
+                user: data.data.user,
+              }),
+            });
+            router.replace("/");
+          } else {
+            setError("Discord authentication failed. Please try again.");
+            setIsLoading(false);
+          }
+        })
+        .catch((err) => {
+          console.error("[LyraPhi] Code exchange failed:", err);
+          setError("Authentication failed. Please try again.");
+          setIsLoading(false);
+        });
       return;
     }
-
     handleSupabaseCallback();
   }, [searchParams, router]);
 
@@ -63,27 +82,35 @@ export default function LoginPage() {
           const data = await exchangeRes.json();
           const payload = data.data || data;
           if (payload.access_token) {
-            localStorage.setItem("phi_token", payload.access_token);
-            localStorage.setItem(
-              "phi_user",
-              JSON.stringify(payload.user || { id: discordId, username: displayName, roles: ["user"] })
-            );
+            // Set httpOnly cookie via server-side
+            await fetch("/api/auth/set-cookie", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                access_token: payload.access_token,
+                user: payload.user || { id: discordId, username: displayName, roles: ["user"] },
+              }),
+            });
             window.location.hash = "";
             router.replace("/");
             return;
           }
         }
 
-        localStorage.setItem("phi_token", accessToken);
-        localStorage.setItem(
-          "phi_user",
-          JSON.stringify({
-            id: user.id,
-            username: displayName,
-            name: displayName,
-            roles: ["user"],
-          })
-        );
+        // Fallback: set cookie with supabase token
+        await fetch("/api/auth/set-cookie", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            access_token: accessToken,
+            user: {
+              id: user.id,
+              username: displayName,
+              name: displayName,
+              roles: ["user"],
+            },
+          }),
+        });
         window.location.hash = "";
         router.replace("/");
       }

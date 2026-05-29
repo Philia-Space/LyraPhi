@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { shikenphiApi } from "@/lib/api";
 import LevelBadge from "@/components/LevelBadge";
@@ -10,15 +10,6 @@ export default function ExamPage() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (stored === "light") {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
 
   const levels = ["N5", "N4", "N3", "N2", "N1"];
 
@@ -38,9 +29,9 @@ export default function ExamPage() {
       } else {
         throw new Error("Failed to create session");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[LyraPhi] Failed to create session:", err);
-      setError(err.message || "Failed to start exam. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to start exam. Please try again.");
       setLoading(false);
     }
   };

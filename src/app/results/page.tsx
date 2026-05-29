@@ -49,9 +49,9 @@ function ResultsContent() {
         const payload = res.data || res;
         setResult(payload);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[LyraPhi] Failed to fetch result:", err);
-      setError(err.message || "Failed to load results.");
+      setError(err instanceof Error ? err.message : "Failed to load results.");
     } finally {
       setLoading(false);
     }

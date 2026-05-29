@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import Navbar from "@/components/Navbar";
 import ClientProviders from "@/components/ClientProviders";
 import "./globals.css";
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeScript}
+        </Script>
       </head>
       <body className="antialiased">
         <ClientProviders>

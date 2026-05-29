@@ -1,4 +1,6 @@
 // Authentication utilities for AuthPhi integration
+// Note: With httpOnly cookies, token is not accessible from JavaScript.
+// Auth state is managed via AuthContext and server-side API routes.
 
 export interface AuthUser {
   id: string;
@@ -7,53 +9,96 @@ export interface AuthUser {
   roles: string[];
 }
 
-export function getToken(): string | null {
-  // In production, token is in httpOnly cookie set by AuthPhi
-  // For development, we can store in localStorage
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("phi_token");
-}
-
-export function setToken(token: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("phi_token", token);
-}
-
-export function clearToken(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem("phi_token");
-}
-
-export function isAuthenticated(): boolean {
-  return !!getToken();
-}
-
-export function hasRole(role: string): boolean {
-  const user = getUser();
-  if (!user) return false;
-  return user.roles.includes(role);
-}
-
-export function getUser(): AuthUser | null {
-  if (typeof window === "undefined") return null;
-  const stored = localStorage.getItem("phi_user");
-  if (!stored) return null;
+/**
+ * Check if user is authenticated by calling the /api/auth/me endpoint.
+ * This is the preferred method since httpOnly cookies are sent automatically.
+ */
+export async function checkAuth(): Promise<AuthUser | null> {
   try {
-    return JSON.parse(stored) as AuthUser;
+    const res = await fetch("/api/auth/me", {
+      credentials: "include",
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.data?.user) {
+        return data.data.user as AuthUser;
+      }
+    }
   } catch {
-    return null;
+    // not authenticated
   }
+  return null;
 }
 
-export function setUser(user: AuthUser): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("phi_user", JSON.stringify(user));
-}
-
-export function logout(): void {
-  clearToken();
+/**
+ * Logout user by clearing the httpOnly cookie via server-side API.
+ */
+export async function logout(): Promise<void> {
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // ignore errors
+  }
   if (typeof window !== "undefined") {
-    localStorage.removeItem("phi_user");
     window.location.href = "/";
   }
+}
+
+/**
+ * @deprecated Use checkAuth() instead. Token is now in httpOnly cookie.
+ */
+export function getToken(): string | null {
+  // Token is in httpOnly cookie, not accessible from JavaScript
+  return null;
+}
+
+/**
+ * @deprecated Token is now managed via httpOnly cookie set by server.
+ */
+export function setToken(_token: string): void {
+  // No-op: token is managed via httpOnly cookie
+}
+
+/**
+ * @deprecated Token is now managed via httpOnly cookie cleared by server.
+ */
+export function clearToken(): void {
+  // No-op: token is managed via httpOnly cookie
+}
+
+/**
+ * @deprecated Use checkAuth() or AuthContext instead.
+ */
+export function isAuthenticated(): boolean {
+  // Cannot check httpOnly cookie from client-side
+  // Use AuthContext or checkAuth() instead
+  return false;
+}
+
+/**
+ * @deprecated Use AuthContext.hasRole() instead.
+ */
+export function hasRole(_role: string): boolean {
+  // Cannot check without user data
+  // Use AuthContext.hasRole() instead
+  return false;
+}
+
+/**
+ * @deprecated Use checkAuth() or AuthContext instead.
+ */
+export function getUser(): AuthUser | null {
+  // User data is no longer stored in localStorage
+  // Use AuthContext or checkAuth() instead
+  return null;
+}
+
+/**
+ * @deprecated User data is now managed by AuthContext.
+ */
+export function setUser(_user: AuthUser): void {
+  // No-op: user data is managed by AuthContext
 }

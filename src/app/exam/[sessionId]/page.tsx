@@ -30,25 +30,60 @@ interface Question {
   passage?: Passage;
   assets?: Asset[];
   options: Option[];
+  user_answer?: string;
 }
 
-function mapShikenQuestions(raw: any[]): Question[] {
+interface SessionPayload {
+  session: {
+    id: string;
+    level: string;
+    status: string;
+    started_at: string;
+    expires_at: string;
+    completed_at?: string;
+    score?: number;
+    time_spent?: number;
+    question_count: number;
+    answered_count: number;
+  };
+  questions?: RawQuestion[];
+}
+
+interface RawQuestion {
+  id: string;
+  index: number;
+  section?: string;
+  prompt: string;
+  context?: string;
+  passage?: { content: string };
+  assets?: { type: string; url: string; asset_id?: string }[];
+  options: (string | { id: string; value: string; label: string })[];
+  user_answer?: string;
+}
+
+interface SubmitResponse {
+  result_id?: string;
+  percentage?: number;
+  score?: number;
+}
+
+function mapShikenQuestions(raw: RawQuestion[]): Question[] {
   const sectionOrder: Record<string, number> = { grammar: 0, vocabulary: 0, reading: 1, listening: 2 };
   const sorted = [...(raw || [])].sort((a, b) => {
-    return (sectionOrder[a.section] ?? 9) - (sectionOrder[b.section] ?? 9);
+    return (sectionOrder[a.section ?? ""] ?? 9) - (sectionOrder[b.section ?? ""] ?? 9);
   });
-  return sorted.map((q: any, qIndex: number) => ({
+  return sorted.map((q: RawQuestion, qIndex: number) => ({
     id: q.id || `q-${qIndex}`,
     serverIndex: q.index ?? qIndex,
     section: q.section,
     prompt: q.prompt,
     context: q.context || undefined,
     passage: q.passage ? { content: q.passage.content } : undefined,
-    assets: (q.assets || []).map((a: any, aIndex: number) => ({
+    assets: (q.assets || []).map((a: { type: string; url: string; asset_id?: string }) => ({
       type: a.type,
       url: a.url || `/api/mondai/assets/${a.asset_id}`,
     })),
-    options: (q.options || []).map((o: any, oIndex: number) => {
+    options: (q.options || []).map((o: string | { id: string; value: string; label: string }, oIndex: number) => {
       if (typeof o === "string") {
         return { id: `opt-${q.id}-${oIndex}`, value: o, label: o };
       }
@@ -67,7 +102,7 @@ export default function ExamSessionPage() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<number, boolean>>({});
-  const [sessionData, setSessionData] = useState<any>(null);
+  const [sessionData, setSessionData] = useState<SessionPayload["session"] | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showMobileNav, setShowMobileNav] = useState(false);
@@ -106,14 +141,14 @@ export default function ExamSessionPage() {
 
   const loadSession = async () => {
     try {
-      const res = await shikenphiApi.getSession(sessionId);
+      const res = await shikenphiApi.getSession(sessionId) as { data?: SessionPayload; session?: SessionPayload["session"]; questions?: RawQuestion[] };
       const payload = res.data || res;
-      setSessionData(payload.session);
+      setSessionData(payload.session || null);
       if (payload.questions) {
         const mapped = mapShikenQuestions(payload.questions);
         setQuestions(mapped);
         const restored: Record<number, string> = {};
-        mapped.forEach((q: any, uiIdx: number) => {
+        mapped.forEach((q: Question, uiIdx: number) => {
           if (q.user_answer) {
             restored[uiIdx] = q.user_answer;
           }
@@ -122,9 +157,9 @@ export default function ExamSessionPage() {
           setAnswers(restored);
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[LyraPhi] Failed to load session:", err);
-      setError(err.message || "Failed to load exam session. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to load exam session. Please try again.");
     } finally {
       const savedTimer = sessionStorage.getItem(`lyra_timer_${sessionId}`);
       if (savedTimer) {
@@ -192,14 +227,15 @@ export default function ExamSessionPage() {
       }
       const res = await shikenphiApi.submitSession(sessionId);
       sessionStorage.removeItem(`lyra_timer_${sessionId}`);
-      const data: any = res.data || res;
+      const responseData = res as { data?: SubmitResponse };
+      const data: SubmitResponse = responseData.data || (res as SubmitResponse);
       if (data?.result_id) {
         router.push(`/results?resultId=${data.result_id}`);
       } else {
         const percentage = data?.percentage ?? 0;
         router.push(`/results?sessionId=${sessionId}&score=${percentage}`);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[LyraPhi] Failed to submit exam:", err);
       sessionStorage.removeItem(`lyra_timer_${sessionId}`);
       router.push(`/exam`);

@@ -8,23 +8,16 @@ export interface ApiError {
   message: string;
 }
 
-export async function fetchJson<T = any>(url: string, options?: RequestInit): Promise<T> {
-  // Get token from localStorage
-  const token = typeof window !== "undefined" ? localStorage.getItem("phi_token") : null;
-  
+export async function fetchJson<T = unknown>(url: string, options?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...options?.headers as Record<string, string>,
   };
   
-  // Add auth token if available
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  
   const res = await fetch(url, {
     ...options,
     headers,
+    credentials: "include", // Include cookies in requests
   });
 
   if (!res.ok) {
@@ -97,7 +90,7 @@ export const shikenphiApi = {
     ),
 
   submitSession: (id: string) =>
-    fetchJson<{ success: boolean; data?: { score: number; total: number; percentage: number; result_id: string; section_breakdown: any; question_results: any[]; achievements_unlocked?: any[] } }>(
+    fetchJson<{ success: boolean; data?: { score: number; total: number; percentage: number; result_id: string; section_breakdown: unknown; question_results: unknown[]; achievements_unlocked?: unknown[] } }>(
       `${API_BASE}/shiken/sessions/${id}/submit`,
       { method: "POST" }
     ),

@@ -11,7 +11,6 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  token: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
@@ -23,25 +22,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on mount
-    const storedToken = localStorage.getItem("phi_token");
-    const storedUser = localStorage.getItem("phi_user");
-    
-    if (storedToken && storedUser) {
+    async function checkAuth() {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setToken(storedToken);
-        setUser(parsedUser);
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data?.user) {
+            setUser(data.data.user);
+          }
+        }
       } catch {
-        localStorage.removeItem("phi_token");
-        localStorage.removeItem("phi_user");
+        // not authenticated
+      } finally {
+        setIsLoading(false);
       }
     }
-    setIsLoading(false);
+    checkAuth();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -61,10 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.success && data.data?.access_token) {
         const { access_token, user: userData } = data.data;
         
-        localStorage.setItem("phi_token", access_token);
-        localStorage.setItem("phi_user", JSON.stringify(userData));
+        // Set httpOnly cookie via server-side API
+        await fetch("/api/auth/set-cookie", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ access_token, user: userData }),
+        });
         
-        setToken(access_token);
         setUser(userData);
         
         return true;
@@ -78,9 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("phi_token");
-    localStorage.removeItem("phi_user");
-    setToken(null);
+    fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     window.location.href = "/";
   };
@@ -91,7 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    token,
     login,
     logout,
     isLoading,

@@ -40,7 +40,7 @@ export default function ReviewPage() {
   const loadReview = async () => {
     try {
       const res = await shikenphiApi.getResultReview(resultId);
-      const data: any = res.data || res;
+      const data: { reviews?: QuestionReview[]; level?: string } = res.data || res;
       setReviews(data?.reviews || []);
       setLevel(data?.level || "N5");
     } catch (err) {
