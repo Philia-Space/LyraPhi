@@ -113,7 +113,7 @@ export interface QuestionInfo {
 
 // ShikenPhi APIs
 export const shikenphiApi = {
-  createSession: (body: { level?: string; templateId?: string; exam_id?: string }) =>
+  createSession: (body: { exam_id: string }) =>
     fetchJson<{ success: boolean; data?: { session_id: string } }>(
       `${API_BASE}/shiken/sessions`,
       { method: "POST", body: JSON.stringify(body) }
