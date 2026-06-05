@@ -26,7 +26,7 @@ export default function Navbar() {
   }, []);
 
   // Hapus Navbar pada saat sesi aktif kuis berjalan (/exam/[sessionId])
-  const isQuizActive = pathname.startsWith("/exam/") && pathname !== "/exam";
+  const isQuizActive = pathname.startsWith("/exam/");
   
   if (isQuizActive) {
     return null;
@@ -56,10 +56,10 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <div className="flex gap-5">
             <Link 
-              href="/exam" 
+              href="/archive" 
               className="text-[10px] font-black uppercase tracking-widest font-mono text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 transition-colors"
             >
-              Exam
+              Archive
             </Link>
             <Link 
               href="/leaderboard" 

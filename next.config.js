@@ -8,6 +8,7 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@philiaspace/ui-primitives': path.resolve(__dirname, '../../libs/phi-ui-primitives/src/index.ts'),
+      '@philiaspace/phi-dashboard': path.resolve(__dirname, '../../libs/phi-dashboard/src/index.ts'),
     };
     return config;
   },

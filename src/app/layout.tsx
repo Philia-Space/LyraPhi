@@ -32,7 +32,7 @@ export default function RootLayout({
           {themeScript}
         </Script>
       </head>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <ClientProviders>
           <Navbar />
           {children}

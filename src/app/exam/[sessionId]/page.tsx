@@ -238,14 +238,14 @@ export default function ExamSessionPage() {
     } catch (err: unknown) {
       console.error("[LyraPhi] Failed to submit exam:", err);
       sessionStorage.removeItem(`lyra_timer_${sessionId}`);
-      router.push(`/exam`);
+      router.push(`/archive`);
     }
   };
 
   const exitSession = () => {
     if (confirm("Exit assessment? Progress will not be saved.")) {
       sessionStorage.removeItem(`lyra_timer_${sessionId}`);
-      router.push("/exam");
+      router.push("/archive");
     }
   };
 
@@ -648,9 +648,14 @@ export default function ExamSessionPage() {
             {/* Prompts context */}
             <div className="px-6 pt-4 pb-2">
               {question.context && (
-                <p className="text-[10px] font-semibold dark:font-medium text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-1.5 font-mono select-none">
-                  {question.context}
-                </p>
+                <div className="bg-slate-50/50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-none p-4 mb-3">
+                  <h4 className="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-2 font-mono select-none">
+                    PASSAGE
+                  </h4>
+                  <p className="text-xs sm:text-sm leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line text-justify font-sans font-normal">
+                    {question.context}
+                  </p>
+                </div>
               )}
               {displayPrompt ? (
                 <h3 className="text-sm sm:text-base font-medium dark:font-normal text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line font-sans">

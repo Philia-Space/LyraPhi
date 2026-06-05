@@ -61,6 +61,20 @@ export const mondaiphiApi = {
   getAsset: (id: string) =>
     fetch(`${API_BASE}/mondai/assets/${id}`),
 
+  // Archive / chronological endpoints
+  listExams: (params?: { level?: string }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.level) searchParams.set("level", params.level);
+    return fetchJson<{ success: boolean; data?: { exams: ExamInfo[]; count: number } }>(
+      `${API_BASE}/mondai/exams?${searchParams}`
+    );
+  },
+
+  getExamQuestions: (examId: string) =>
+    fetchJson<{ success: boolean; data?: { exam_id: string; questions: QuestionInfo[]; count: number } }>(
+      `${API_BASE}/mondai/exams/${examId}/questions`
+    ),
+
   // Admin APIs
   adminCreateQuestion: (body: { level: string; section: string; prompt: string; context?: string; answer_value: string; answer_note?: string; passage_id?: string; options?: { value: string; label: string; sort_order: number }[] }) =>
     fetchJson(`${API_BASE}/mondai/admin/questions`, { method: "POST", body: JSON.stringify(body) }),
@@ -72,9 +86,34 @@ export const mondaiphiApi = {
     fetchJson(`${API_BASE}/mondai/admin/questions/${id}`, { method: "DELETE" }),
 };
 
+// Archive types
+export interface ExamInfo {
+  id: string;
+  level: string;
+  year: number;
+  month: number;
+  date_label: string;
+  is_practice: boolean;
+}
+
+export interface QuestionInfo {
+  id: string;
+  level: string;
+  section: string;
+  prompt: string;
+  context?: string;
+  year?: number;
+  month?: number;
+  date_label?: string;
+  question_type?: number;
+  section_order?: number;
+  section_title?: string;
+  is_practice?: boolean;
+}
+
 // ShikenPhi APIs
 export const shikenphiApi = {
-  createSession: (body: { level: string; templateId?: string }) =>
+  createSession: (body: { level?: string; templateId?: string; exam_id?: string }) =>
     fetchJson<{ success: boolean; data?: { session_id: string } }>(
       `${API_BASE}/shiken/sessions`,
       { method: "POST", body: JSON.stringify(body) }

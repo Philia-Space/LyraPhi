@@ -9,9 +9,31 @@ interface AuthUser {
   roles: string[];
 }
 
+export interface VerifyRoleResponse {
+  allowed: boolean;
+  is_admin?: boolean;
+  login_method?: "discord" | "local";
+  user_roles?: string[];
+  required_roles?: string[];
+  matched_roles?: string[];
+  guild_id?: string;
+  in_guild?: boolean;
+  message?: string;
+  discord_user?: {
+    id: string;
+    username: string;
+  };
+  note?: string;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   login: (username: string, password: string) => Promise<boolean>;
+  completeDiscordLogin: (
+    accessToken: string,
+    userData: AuthUser,
+    redirectTo?: string
+  ) => Promise<{ allowed: boolean; data?: VerifyRoleResponse }>;
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -67,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ access_token, user: userData }),
         });
         
+        // Local login — skip role verification
         setUser(userData);
         
         return true;
@@ -76,6 +99,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Login error:", error);
       return false;
+    }
+  };
+
+  /**
+   * Completes a Discord OAuth login by setting the cookie, verifying the Discord
+   * role, and either granting access or redirecting to /access-denied.
+   *
+   * Returns { allowed: true } if access is granted, or { allowed: false } with
+   * the verify-role response data if access is denied.
+   */
+  const completeDiscordLogin = async (
+    accessToken: string,
+    userData: AuthUser,
+    redirectTo?: string
+  ): Promise<{ allowed: boolean; data?: VerifyRoleResponse }> => {
+    try {
+      // Step 1: Set httpOnly cookie so subsequent requests are authenticated
+      await fetch("/api/auth/set-cookie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: accessToken, user: userData }),
+      });
+
+      // Step 2: Verify Discord role
+      const verifyRes = await fetch("/api/auth/discord/verify-role", {
+        credentials: "include",
+      });
+
+      if (!verifyRes.ok) {
+        // If verify-role fails, fall back to allowing access
+        console.warn("[LyraPhi] verify-role API failed, allowing access");
+        setUser(userData);
+        return { allowed: true };
+      }
+
+      const verifyPayload = await verifyRes.json();
+      const verifyData: VerifyRoleResponse = verifyPayload.data || verifyPayload;
+
+      // Admin users always allowed
+      if (verifyData.is_admin) {
+        setUser(userData);
+        return { allowed: true };
+      }
+
+      // Local login always allowed
+      if (verifyData.login_method === "local") {
+        setUser(userData);
+        return { allowed: true };
+      }
+
+      // Discord user with valid role
+      if (verifyData.allowed) {
+        setUser(userData);
+        return { allowed: true };
+      }
+
+      // Access denied — store result for access-denied page
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("verify_role_result", JSON.stringify(verifyData));
+      }
+
+      // Do NOT set user — redirect to access-denied
+      if (typeof window !== "undefined") {
+        window.location.href = "/access-denied";
+      }
+
+      return { allowed: false, data: verifyData };
+    } catch (error) {
+      console.error("[LyraPhi] completeDiscordLogin failed:", error);
+      // Fail open — allow access if verification fails
+      setUser(userData);
+      return { allowed: true };
     }
   };
 
@@ -92,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextType = {
     user,
     login,
+    completeDiscordLogin,
     logout,
     isLoading,
     isAuthenticated: !!user,

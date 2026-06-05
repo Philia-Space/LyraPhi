@@ -3,14 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, completeDiscordLogin } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -18,7 +17,7 @@ export default function LoginPage() {
     const code = searchParams.get("code");
     if (code) {
       setIsLoading(true);
-      // Exchange code for token via server-side
+      // Exchange code for token via AuthPhi
       fetch("/api/auth/discord/redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -27,16 +26,12 @@ export default function LoginPage() {
         .then((res) => res.json())
         .then(async (data) => {
           if (data.success && data.data?.access_token) {
-            // Set httpOnly cookie via server
-            await fetch("/api/auth/set-cookie", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                access_token: data.data.access_token,
-                user: data.data.user,
-              }),
-            });
-            router.replace("/");
+            const { access_token, user: userData } = data.data;
+            const result = await completeDiscordLogin(access_token, userData);
+            if (result.allowed) {
+              router.replace("/");
+            }
+            // If not allowed, completeDiscordLogin already redirects to /access-denied
           } else {
             setError("Discord authentication failed. Please try again.");
             setIsLoading(false);
@@ -49,75 +44,7 @@ export default function LoginPage() {
         });
       return;
     }
-    handleSupabaseCallback();
   }, [searchParams, router]);
-
-  const handleSupabaseCallback = async () => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get("access_token");
-    const refreshToken = hashParams.get("refresh_token");
-
-    if (!accessToken) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser(accessToken);
-
-      if (user) {
-        const discordId = user.user_metadata?.provider_id || user.id;
-        const displayName = user.user_metadata?.full_name || user.user_metadata?.name || "Discord User";
-        const email = user.email || "";
-
-        const exchangeRes = await fetch("/api/auth/discord/exchange", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            supabase_token: accessToken,
-            discord_id: discordId,
-            username: displayName,
-            email: email,
-          }),
-        });
-
-        if (exchangeRes.ok) {
-          const data = await exchangeRes.json();
-          const payload = data.data || data;
-          if (payload.access_token) {
-            // Set httpOnly cookie via server-side
-            await fetch("/api/auth/set-cookie", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                access_token: payload.access_token,
-                user: payload.user || { id: discordId, username: displayName, roles: ["user"] },
-              }),
-            });
-            window.location.hash = "";
-            router.replace("/");
-            return;
-          }
-        }
-
-        // Fallback: set cookie with supabase token
-        await fetch("/api/auth/set-cookie", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            access_token: accessToken,
-            user: {
-              id: user.id,
-              username: displayName,
-              name: displayName,
-              roles: ["user"],
-            },
-          }),
-        });
-        window.location.hash = "";
-        router.replace("/");
-      }
-    } catch (err) {
-      console.error("[LyraPhi] Supabase callback error:", err);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +63,14 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDiscordLogin = () => {
+    // Redirect to AuthPhi's Discord OAuth authorize endpoint.
+    // AuthPhi handles the full OAuth flow and redirects back to this page
+    // with a ?code=... param that we redeem above.
+    const redirectTo = encodeURIComponent(window.location.origin + "/login");
+    window.location.href = "/api/auth/discord/authorize?redirect_to=" + redirectTo;
   };
 
   return (
@@ -196,12 +131,7 @@ export default function LoginPage() {
 
         <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
           <button
-            onClick={() => {
-              supabase.auth.signInWithOAuth({
-                provider: "discord",
-                options: { redirectTo: window.location.origin + "/login" },
-              });
-            }}
+            onClick={handleDiscordLogin}
             className="w-full py-2.5 flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white text-[10px] font-black uppercase tracking-widest font-mono rounded-none transition-colors cursor-pointer"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

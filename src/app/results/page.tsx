@@ -101,7 +101,7 @@ function ResultsContent() {
         <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-none text-center">
           <p className="text-xs font-mono text-slate-800 dark:text-slate-200">{error}</p>
           <button
-            onClick={() => router.push("/exam")}
+            onClick={() => router.push("/archive")}
             className="mt-4 px-6 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-none cursor-pointer font-mono"
           >
             Return to Exam
@@ -189,7 +189,7 @@ function ResultsContent() {
               Review Answers
             </button>
             <button
-              onClick={() => router.push("/exam")}
+              onClick={() => router.push("/archive")}
               className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-black uppercase tracking-widest rounded-none border border-slate-900 dark:border-slate-100 transition-colors shadow-sm cursor-pointer font-mono"
             >
               Take Another Exam
